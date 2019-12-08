@@ -12,7 +12,7 @@ def spectral_features(raw: mne.io.Raw, max_freq: int = 100, n_fft: int = 48) -> 
     Computes a n_fft (default 48) point FFT. Takes the log to compute the final features which
     are then concatenated into a one dimensional feature vector.
 
-    Returns a 5952 x 1 np.array"""
+    Returns a N x 24 np.array where N is the number of channels"""
 
     raw.filter(None, max_freq, h_trans_bandwidth=0.5, filter_length='10s', phase='zero-double', fir_design='firwin2')
     raw.resample(2*max_freq, npad="auto")
