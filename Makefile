@@ -22,12 +22,18 @@ endif
 
 ## Install Python Dependencies
 requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	#$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
+	#$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	# install MNE and requirements
+	curl --remote-name https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
+	conda env update -n $(PROJECT_NAME) --file environment.yml
 
 ## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+data: 
+	$(PYTHON_INTERPRETER) -m src.data.make_dataset hcp data/hcp-train.csv data/processed
+	$(PYTHON_INTERPRETER) -m src.data.make_dataset hcp data/hcp-eval.csv data/processed
+	$(PYTHON_INTERPRETER) -m src.data.make_dataset mous data/hcp-eval.csv data/processed
+	$(PYTHON_INTERPRETER) -m src.data.make_dataset mous data/hcp-eval.csv data/processed
 
 ## Delete all compiled Python files
 clean:
