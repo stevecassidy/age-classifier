@@ -47,8 +47,9 @@ def load_dataset(data_folder: str, csvfile: str) -> Dict:
         for filename in glob.glob(pattern):
             data = np.load(filename)
             result['id'].append(os.path.splitext(os.path.basename(filename))[0])
-            result['age'].append(subjects[subject]['age'])  # save the age
-            result['gender'].append(subjects[subject]['gender'])  # save the gender
+            if 'age' in subjects[subject]:
+                result['age'].append(subjects[subject]['age'])  
+                result['gender'].append(subjects[subject]['gender'])  
             result['data'].append(data)
     
     return result
@@ -68,7 +69,10 @@ def load_subjects(csvfile: str) -> Dict:
     with open(csvfile, 'r', encoding='utf-8-sig') as fd:
         reader: csv.DictReader = csv.DictReader(fd)
         for row in reader:
-            result[row['Subject']] = {'age': row['Age'], 'gender': row['Gender']}
+            if 'Age' in row:
+                result[row['Subject']] = {'age': row['Age'], 'gender': row['Gender']}
+            else:
+                result[row['Subject']] = {}
 
     return result
 

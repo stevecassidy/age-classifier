@@ -12,8 +12,8 @@ def transform_data(data, channels):
     return [np.ravel(d[0][:channels]) for d in data['data']] 
 
 
-dataset = load_dataset('data/processed/hcp-new', 'data/hcp-train.csv')
-testdataset = load_dataset('data/processed/hcp-new', 'data/hcp-eval.csv')
+dataset = load_dataset('data/processed/hcp', 'data/hcp-train.csv')
+testdataset = load_dataset('data/processed/hcp', 'data/hcp-eval-dist.csv')
 
 channels = 10
 
