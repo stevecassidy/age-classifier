@@ -17,7 +17,7 @@ PROJECT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__
 HCP_DATA_FOLDER = PROJECT_DIR + "/data/raw/"
 MOUS_DATA_FOLDER = PROJECT_DIR + "/data/Donders_MEG/"
 
-HCP_DATA_FOLDER = '/Volumes/CamCan/Extracted'
+HCP_DATA_FOLDER = '/Volumes/Fast SSD/Extracted/'
 MOUS_DATA_FOLDER = '/Volumes/Fast SSD/Donders_MEG/'
 
 EPOCH_DURATION = 20  # duration of recording (s) for each processed data point 
@@ -29,24 +29,26 @@ mne.set_log_level('ERROR')
 logger = logging.getLogger()
 
 
-def load_dataset(csvfile: str) -> Dict:
+def load_dataset(data_folder: str, csvfile: str) -> Dict:
     """Load a dataset given a csv file containing subject ids and metadata
     Return a dictionary with keys 'target' and 'data' suitable for training a model"""
 
     result = {
-        'target': [],
-        'data': []
+        'id': [],
+        'age': [],
+        'gender': [],
+        'data': [],
     }
     subjects: Dict = load_subjects(csvfile)
     
-    print(PROJECT_DIR)
-
     for subject in subjects:
         # get all files matching this speaker
-        pattern = os.path.join(PROJECT_DIR, 'data/processed', subject+"*")
+        pattern = os.path.join(data_folder, subject+"*")
         for filename in glob.glob(pattern):
             data = np.load(filename)
-            result['target'].append(subjects[subject])  # save the age
+            result['id'].append(os.path.splitext(os.path.basename(filename))[0])
+            result['age'].append(subjects[subject]['age'])  # save the age
+            result['gender'].append(subjects[subject]['gender'])  # save the gender
             result['data'].append(data)
     
     return result
@@ -66,7 +68,7 @@ def load_subjects(csvfile: str) -> Dict:
     with open(csvfile, 'r', encoding='utf-8-sig') as fd:
         reader: csv.DictReader = csv.DictReader(fd)
         for row in reader:
-            result[row['Subject']] = row['Age']
+            result[row['Subject']] = {'age': row['Age'], 'gender': row['Gender']}
 
     return result
 
@@ -81,7 +83,7 @@ def make_hcp_dataset(csvfile: str, output_filepath: str) -> None:
                 raw = read_hcp(subject, HCP_DATA_FOLDER, run_index)
                 labels, features = spectral_epochs(subject, raw, EPOCH_DURATION)
                 for i in range(len(labels)):
-                    fname = os.path.join(output_filepath, labels[i] + ".npy")
+                    fname = os.path.join(output_filepath, labels[i] + "-" + str(run_index) + ".npy")
                     np.save(fname, features[i])
                     logger.info("Wrote {}".format(fname))
         else:
@@ -94,15 +96,15 @@ def make_mous_dataset(csvfile: str, output_filepath: str) -> None:
     subjects = load_subjects(csvfile)
 
     for subject in subjects:
-        if os.path.exists(os.path.join(MOUS_DATA_FOLDER, 'Resting', subject)):
             raw = read_mous(subject, MOUS_DATA_FOLDER)
-            labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, max_freq=74)
-            for i in range(len(labels)):
-                fname = os.path.join(output_filepath, labels[i] + ".npy")
-                np.save(fname, features[i])
-                logger.info("Wrote {}".format(fname))
-        else:
-            logger.error("Missing: {}".format(subject))
+            if raw:
+                labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, max_freq=74)
+                for i in range(len(labels)):
+                    fname = os.path.join(output_filepath, labels[i] + ".npy")
+                    np.save(fname, features[i])
+                    logger.info("Wrote {}".format(fname))
+            else:
+                logger.error("Missing: {}".format(subject))
 
 
 @click.command()

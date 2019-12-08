@@ -93,14 +93,18 @@ def read_mous(subject: str, data_folder: str) -> mne.io.Raw:
     Read a data file from the MOUS dataset, return a Raw instance
     """
 
-    raw_path = os.path.join(data_folder, 'Resting/{}/sub-{}_task-rest_meg.ds'.format(subject, subject))
+    try:
+        raw_path = os.path.join(data_folder, 'Resting/{}/sub-{}_task-rest_meg.ds'.format(subject, subject))
 
-    raw = mne.io.read_raw_ctf(raw_path, preload=True)
+        raw = mne.io.read_raw_ctf(raw_path, preload=True)
 
-    picks = mne.pick_types(raw.info, meg=True, eeg=False, stim=False, eog=True, exclude='bads') 
-    raw.pick(picks)
+        picks = mne.pick_types(raw.info, meg=True, eeg=False, stim=False, eog=True, exclude='bads') 
+        raw.pick(picks)
+        return raw
 
-    return raw
+    except:
+        return None
+
 """ 
     raw.apply_gradient_compensation(3) # apply gradient compensation 3rd order compensation
 
