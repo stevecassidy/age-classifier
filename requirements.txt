@@ -6,3 +6,7 @@ click
 Sphinx
 coverage
 flake8
+
+# mne-hcp to read HCP MEG data
+https://github.com/mne-tools/mne-hcp/archive/master.zip
+

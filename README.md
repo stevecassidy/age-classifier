@@ -16,12 +16,12 @@ This will create a new conda environment called `age-classifier` and install the
 To achieve the same thing without the makefile run the following commands:
 
 ```
-	# install MNE and requirements https://mne.tools/stable/install/mne_python.html
-	curl --remote-name https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
-	conda create --name age-classifier --file environment.yml
-    conda activate age-classifier
-    python -m pip install -U pip setuptools wheel
-	python -m pip install -r requirements.txt
+# install MNE and requirements https://mne.tools/stable/install/mne_python.html
+curl --remote-name https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
+conda create --name age-classifier --file environment.yml
+conda activate age-classifier
+python -m pip install -U pip setuptools wheel
+python -m pip install -r requirements.txt
 ```
 
 ## Data
@@ -41,7 +41,7 @@ This script converts the raw data into the preprocessed version. You need to edi
 location of the data on your system. You can then run it from the command line, eg:
 
 ```
-	python -m src.data.make_dataset hcp data/hcp-speakers.csv data/processed/hcp
+python -m src.data.make_dataset hcp data/hcp-speakers.csv data/processed/hcp
 ```
 
 The first argument is `hcp` or `mous` for the different datasets.  This script makes use of
@@ -54,6 +54,6 @@ modify the feature vector, then make changes here.
 This script trains a simple SVM model on the HCP data and generates predictions on the evaluation data.
 
 ```
-    python -m src.models.train_model > hcp-prediction-results.csv
+python -m src.models.train_model > hcp-prediction-results.csv
 ```
 
