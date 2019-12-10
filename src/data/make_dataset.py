@@ -83,7 +83,7 @@ def make_hcp_dataset(csvfile: str, output_filepath: str) -> None:
         if os.path.exists(os.path.join(HCP_DATA_FOLDER, subject)):
             for run_index in range(3):
                 raw = read_hcp(subject, HCP_DATA_FOLDER, run_index)
-                labels, features = spectral_epochs(subject, raw, EPOCH_DURATION)
+                labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, max_freq=74)  # to match MOUS
                 for i in range(len(labels)):
                     fname = os.path.join(output_filepath, labels[i] + "-" + str(run_index) + ".npy")
                     np.save(fname, features[i])

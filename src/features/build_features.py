@@ -52,32 +52,6 @@ def spectral_epochs(label: str, raw: mne.io.Raw, epoch_size: int, max_freq: int 
     return labels, features
 
 
-
-
-def process_hcp_runs():
-
-    for run_index in range(3):
-        raw = hcp.read_raw(subject=subject, data_type='rest', hcp_path=data_folder, run_index=run_index)
-
-        # duration in seconds
-        duration = int(raw.n_times/raw.info['sfreq'])
-
-        start: float = 0.0
-        for end in range(epoch_size, min(duration, 400), epoch_size):
-            raw.crop(tmin=start, tmax=end).load_data()
-            features.append(spectral_features(raw))
-            labels.append("{}-{}-{}".format(subject, run_index, int(end/epoch_size)))
-
-            start = end
-            # re-read the signal - faster than copying in-memory version
-            raw = hcp.read_raw(subject=subject, data_type='rest', hcp_path=data_folder, run_index=run_index)
-            # progress...
-            print('.', end='', flush=True)
-        print('|', end='', flush=True)
-    return labels, features
-
-
-
 def read_hcp(subject: str, data_folder: str, run_index: int) -> mne.io.Raw:
     """
     Read a data file from the HCP dataset, return a Raw instance
@@ -104,18 +78,6 @@ def read_mous(subject: str, data_folder: str) -> mne.io.Raw:
 
     except:
         return None
-
-""" 
-    raw.apply_gradient_compensation(3) # apply gradient compensation 3rd order compensation
-
-    raw.notch_filter(np.arange(50,100,50), fir_design='firwin') # apply notch
-    raw.filter(0.5,30) # filter - pretty aggressive
-
-    raw.crop(60, 120).load_data().pick_types(meg=True, eeg=False).resample(80) # crop out a minute resample to 80Hz - this is pretty aggressive
-
-    raw_mag = raw.copy().pick_types(meg='mag') #separate magnetometers
-    raw_grad = raw.copy().pick_types(meg='grad') #separate gradiometers
-     """
 
 
 if __name__=='__main__': 
