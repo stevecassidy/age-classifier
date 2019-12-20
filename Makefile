@@ -23,8 +23,10 @@ endif
 ## Create Conda environment and install Python Dependencies
 environment: 
 	# install MNE and requirements https://mne.tools/stable/install/mne_python.html
-	curl --remote-name https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
-	conda create --name $(PROJECT_NAME) --file environment.yml
+	#curl --remote-name https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
+	# environment.yml now part of the project, env name is in the first line of this file
+	# also removed myavi package which doesn't install in a server environment
+	conda env create --file environment.yml
 	conda activate $(PROJECT_NAME)
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
