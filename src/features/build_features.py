@@ -3,10 +3,11 @@ import numpy as np
 import mne
 import hcp
 
-def spectral_features(raw: mne.io.Raw, max_freq: int = 100, n_fft: int = 48) -> np.array: 
+def spectral_features(raw: mne.io.Raw, max_freq: int = 100, n_fft: int = 48, filter=True) -> np.array: 
     """Compute flattened spectral features given a cropped raw recording.
 
-    Data is low-pass filtered to max_freq (default 100Hz) and downsampled to 2*max_freq before features are
+    If the `filter` argument is True data is low-pass filtered to max_freq (default 100Hz)
+    and downsampled to 2*max_freq before features are
     computed. 
 
     Computes a n_fft (default 48) point FFT. Takes the log to compute the final features which
@@ -14,15 +15,16 @@ def spectral_features(raw: mne.io.Raw, max_freq: int = 100, n_fft: int = 48) -> 
 
     Returns a N x 24 np.array where N is the number of channels"""
 
-    raw.filter(None, max_freq, h_trans_bandwidth=0.5, filter_length='10s', phase='zero-double', fir_design='firwin2')
-    raw.resample(2*max_freq, npad="auto")
+    if filter:
+        raw.filter(None, max_freq, h_trans_bandwidth=0.5, filter_length='10s', phase='zero-double', fir_design='firwin2')
+        raw.resample(2*max_freq, npad="auto")
 
     psds, _freqs = mne.time_frequency.psd_welch(raw, fmin=1, n_fft=n_fft)
 
     #return np.ravel(np.log(psds))
     return np.log(psds)
 
-def spectral_epochs(label: str, raw: mne.io.Raw, epoch_size: int, max_freq: int = 100, n_fft: int = 48) -> np.array: 
+def spectral_epochs(label: str, raw: mne.io.Raw, epoch_size: int, max_freq: int = 100, n_fft: int = 48, filter=True) -> np.array: 
     """Read raw data and split into epochs of a given size (s), compute features
     over each one
     label: subject identifier
@@ -45,7 +47,7 @@ def spectral_epochs(label: str, raw: mne.io.Raw, epoch_size: int, max_freq: int 
 
     
     for N in range(len(epochs)):
-        features.append(spectral_features(epochs[N], max_freq=max_freq, n_fft=n_fft))
+        features.append(spectral_features(epochs[N], max_freq=max_freq, n_fft=n_fft, filter=filter))
         labels.append("{}-{}".format(label, N))
         print('.', end='', flush=True)
     print('|', end='', flush=True)        
@@ -78,6 +80,26 @@ def read_mous(subject: str, data_folder: str) -> mne.io.Raw:
 
     except:
         return None
+
+def read_camcan(subject: str, data_folder: str) -> mne.io.Raw:
+    """
+    Read a data file from the MOUS dataset, return a Raw instance
+    """
+
+    try:
+        raw_path = os.path.join(data_folder, '{}/rest/rest_raw.fif'.format(subject))
+
+        print("READING", raw_path)
+
+        raw = mne.io.read_raw_fif(raw_path, preload=True)
+
+        picks = mne.pick_types(raw.info, meg=True, eeg=False, stim=False, eog=True, exclude='bads') 
+        raw.pick(picks)
+        return raw
+
+    except:
+        return None
+
 
 
 if __name__=='__main__': 

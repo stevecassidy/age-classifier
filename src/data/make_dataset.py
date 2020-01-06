@@ -8,17 +8,19 @@ from typing import Dict
 import mne
 import glob
 
-from src.features.build_features import spectral_epochs, read_hcp, read_mous
+from src.features.build_features import spectral_epochs, read_hcp, read_mous, read_camcan
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 HCP_DATA_FOLDER = PROJECT_DIR + "/data/raw/"
 MOUS_DATA_FOLDER = PROJECT_DIR + "/data/Donders_MEG/"
 
-HCP_DATA_FOLDER = '/Volumes/Fast SSD/Extracted/'
-MOUS_DATA_FOLDER = '/Volumes/Fast SSD/Donders_MEG/'
+HCP_DATA_FOLDER = '/var/syndisk/MEG/HCP/data/'
+MOUS_DATA_FOLDER = '/var/syndisk/MEG/Donders_MEG/'
+CAMCAN_DATA_FOLDER = "/var/syndisk/MEG/CANCAM/camcan43/cc700/meg/pipeline/release004/data/aamod_meg_get_fif_00001/"
 
-EPOCH_DURATION = 20  # duration of recording (s) for each processed data point 
+
+EPOCH_DURATION = 60  # duration of recording (s) for each processed data point 
                      # recordings are cut up into chunks of this size 
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -80,6 +82,7 @@ def make_hcp_dataset(csvfile: str, output_filepath: str) -> None:
     subjects = load_subjects(csvfile)
 
     for subject in subjects:
+        print(os.path.join(HCP_DATA_FOLDER, subject))
         if os.path.exists(os.path.join(HCP_DATA_FOLDER, subject)):
             for run_index in range(3):
                 raw = read_hcp(subject, HCP_DATA_FOLDER, run_index)
@@ -98,15 +101,40 @@ def make_mous_dataset(csvfile: str, output_filepath: str) -> None:
     subjects = load_subjects(csvfile)
 
     for subject in subjects:
-            raw = read_mous(subject, MOUS_DATA_FOLDER)
-            if raw:
-                labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, max_freq=74)
-                for i in range(len(labels)):
-                    fname = os.path.join(output_filepath, labels[i] + ".npy")
-                    np.save(fname, features[i])
-                    logger.info("Wrote {}".format(fname))
-            else:
-                logger.error("Missing: {}".format(subject))
+        print("Subject", subject)
+        raw = read_mous(subject, MOUS_DATA_FOLDER)
+        print("read raw...")
+        if raw:
+            labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, max_freq=74)
+            for i in range(len(labels)):
+                fname = os.path.join(output_filepath, labels[i] + ".npy")
+                np.save(fname, features[i])
+                print("Wrote {}".format(fname))
+                logger.info("Wrote {}".format(fname))
+        else:
+            logger.error("Missing: {}".format(subject))
+
+
+
+def make_camcan_dataset(csvfile: str, output_filepath: str) -> None:
+    """Process the CAMCAN dataset"""
+
+    subjects = load_subjects(csvfile)
+
+    for subject in subjects:
+        print("Subject", subject)
+        raw = read_camcan(subject, CAMCAN_DATA_FOLDER)
+        print("read raw...")
+        if raw:
+            labels, features = spectral_epochs(subject, raw, EPOCH_DURATION, filter=False)
+            for i in range(len(labels)):
+                fname = os.path.join(output_filepath, labels[i] + ".npy")
+                np.save(fname, features[i])
+                print("Wrote {}".format(fname))
+                logger.info("Wrote {}".format(fname))
+        else:
+            logger.error("Missing: {}".format(subject))
+
 
 
 @click.command()
@@ -127,6 +155,8 @@ def main(dataset, csvfile, output_filepath):
         make_hcp_dataset(csvfile, output_filepath)
     elif dataset == 'mous':
         make_mous_dataset(csvfile, output_filepath)
+    elif dataset == 'camcan':
+        make_camcan_dataset(csvfile, output_filepath)
     else:
         print("Unknown dataset name", dataset)
 
